@@ -3,6 +3,8 @@ pragma solidity ^0.4.24;
 // ----------------------------------------------------------------------------
 // 'WISE' token contract
 //
+//  NOTICE: UNDER DEVELOPMENT UNTIL 2019
+//
 // Deployed to : 0xa78248A027623f7dbed6FF06a31d070356F69eaD
 // Symbol      : WISE
 // Name        : WISE Token
