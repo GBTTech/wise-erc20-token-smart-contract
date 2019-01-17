@@ -1,85 +1,75 @@
-pragma solidity 0.4.24;
-
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
+pragma solidity ^0.5.0;
+ 
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
 import "openzeppelin-solidity/contracts/token/ERC20/TokenTimelock.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Pausable.sol";
 import "openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/emission/MintedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol";
-import "openzeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol";
-import "openzeppelin-solidity/contracts/crowdsale/distribution/RefundableCrowdsale.sol";
+import "openzeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol"; 
+import "openzeppelin-solidity/contracts/crowdsale/distribution/RefundablePostDeliveryCrowdsale.sol";
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, RefundableCrowdsale {
-  
+contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, RefundablePostDeliveryCrowdsale, Ownable {
   /*
+                    WSE             USD         TR-USD  TOKEN-RATE        STRATEGY
+  ETH PRICE: $150
+  TOTAL SUPPLY: 100 000 000       100 000 0000     
 
-  DEVELOPER NOTES
+  AIR-DROPED     5 000 000 (5%)                 $10                       MINTED
+  ADVISORS       4 000 000 (4%)                 $10                       MINTED
+  TEAM           7 000 000 (7%)                 $10                       MINTED
+  BUSINESS      30 000 000 (30%)                $10                       MINTED
+  RESERVER      20 000 000 (20%)                $10                       MINTED
 
-  // GOAL:    100,000,000 TOKENS
-  // WEI:     100,000,00  PER 1 ETH
-  // MIN-CAP: 100,000,00
-  // MAX-CAP: 500,000,00
-
-  ///////////////
-  // REAL CASE //
-  ///////////////
-
-  // ETH PRICE 139 1/1/19 
-  // EXPECTED WISE TOKEN PRICE: 10 USD
-  // WISE TOKEN: 10 USD (ETH * 10): 1390 ETH
-  // WISE TOKEN IS 0.00011976047904191617
-  // $10 / 139 = 0.07194244604316546
-  // 10(^18) * 0.071520526391074 = 715205263910.74
-  // 715205263910.74 / 10(^18)
-  // WEI:     138.888888888888889
-  
+  PRIVATE       20 000 000 (20%)  60 000 000    $3       50               MANUAL/BUY
+  PRE           10 000 000 (10%)  50 000 000    $5       20               MANUAL/BUY
+  PUBLIC         5 000 000 (5%)   40 000 000    $8       19               BUY
   */
 
   // Events
   event EthTransferred(string text);
   event EthRefunded(string text);
 
-  // Crowdsale Stages
+  // Crowdsale
   enum CrowdsaleStage { PrivateICO, PreICO, ICO }
-
-  // Default to presale stage
   CrowdsaleStage public stage = CrowdsaleStage.PrivateICO;
+  uint256 private _wserate;
 
   // Token Distribution
-  uint256 public tokenSalePercentage   = 70;
-  uint256 public foundersPercentage    = 10;
-  uint256 public foundationPercentage  = 10;
-  uint256 public partnersPercentage    = 10;
+  uint256 public totalTokens                = 100000000;
+  uint256 public crowdsaleFundDistribution  = 35;
+  uint256 public airdroppedFundDistribution = 5;
+  uint256 public advisorsFundDistribution   = 3;
+  uint256 public teamFundDistribution       = 7;
+  uint256 public bussinesFundDistribution   = 30;
+  uint256 public reserveFundDistribution    = 20;
+  uint256 public privateFundDistribution    = 20;
+  uint256 public preFundDistribution        = 10;
+  uint256 public publicFundDistribution     = 5;
 
-  // Token reserve funds
-  address public foundersFund;
-  address public foundationFund;
-  address public partnersFund;
+  // Token funds
+  address public crowdsaleFund;
+  address public airdroppedFund;
+  address public advisorsFund;
+  address public teamFund;
+  address public bussinesFund;
+  address public reserveFund;
 
-  // Token time lock
-  uint256 public releaseTime;
-  address public foundersTimelock;
-  address public foundationTimelock;
-  address public partnersTimelock;
-  
-  // Track investor contributions
-  uint256 public investorMinCap = 1000000000000000000;
-  uint256 public investorHardCap= 5000000000000000000;
-  mapping(address => uint256) public contributions;
+  // Tracking tokens
+  uint256 public totalPrivateTokens = 0;
+  uint256 public totalPreTokens     = 0;
+  uint256 public totalPublicTokens  = 0;
 
   constructor(
     uint256 _rate,
-    address _wallet,
-    ERC20 _token,
+    address payable _wallet,
+    ERC20Mintable _token,
     uint256 _cap,
-    uint256 _openingTime,
-    uint256 _closingTime,
     uint256 _goal,
-    address _foundersFund,
-    address _foundationFund,
-    address _partnersFund,
-    uint256 _releaseTime
+    address[] memory _fundAddresses,
+    uint256 _openingTime,
+    uint256 _closingTime
   )
     Crowdsale(_rate, _wallet, _token)
     CappedCrowdsale(_cap)
@@ -88,28 +78,27 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
     public
   {
     require(_goal <= _cap);
-    foundersFund   = _foundersFund;
-    foundationFund = _foundationFund;
-    partnersFund   = _partnersFund;
-    releaseTime    = _releaseTime;
+    _wserate = _rate;
+    airdroppedFund  = _fundAddresses[0];
+    advisorsFund    = _fundAddresses[1];
+    teamFund        = _fundAddresses[2];
+    bussinesFund    = _fundAddresses[3];
+    reserveFund     = _fundAddresses[4];
   }
-
+ 
   /**
-  * @dev Returns the amount contributed so far by a sepecific user.
-  * @param _beneficiary Address of contributor
-  * @return User contribution so far
+    * @dev Change the current rate
+    * @param _rate rate
   */
-  function getUserContribution(address _beneficiary)
-    public view returns (uint256)
-  {
-    return contributions[_beneficiary];
+  function setCurrentRate(uint256 _rate) onlyOwner public {
+      _wserate = _rate;
   }
-
+ 
   /**
   * @dev Allows admin to update the crowdsale stage
   * @param _stage Crowdsale stage
   */
-  function setCrowdsaleStage(uint _stage) public onlyOwner {
+  function setCrowdsaleStage(uint _stage, uint256 _rate) onlyOwner public {
     if(uint(CrowdsaleStage.PrivateICO) == _stage) {
       stage = CrowdsaleStage.PrivateICO;
     } else if (uint(CrowdsaleStage.PreICO) == _stage) {
@@ -117,86 +106,154 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
     } else if (uint(CrowdsaleStage.ICO) == _stage) {
       stage = CrowdsaleStage.ICO;
     }
+    // ETH-PRICE / TOKEN-USD-PRICE
+    setCurrentRate(_rate);
+  }
 
+  /**
+    * @dev Update current tokens total stack by stage
+    * @param _tokens new tokens
+    */
+  function updateTokensQuantity(uint256 _tokens) internal {
     if(stage == CrowdsaleStage.PrivateICO) {
-       // 1 ETH can buy 5 tokens
-      setCurrentRate(5);
+      totalPrivateTokens = totalPrivateTokens.add(_tokens); 
     } else if (stage == CrowdsaleStage.PreICO) {
-       // 1 ETH can buy 3 tokens
-      setCurrentRate(3);
+      totalPreTokens = totalPreTokens.add(_tokens);
     } else if (stage == CrowdsaleStage.ICO) {
-       // 1 ETH can buy 1 tokens
-      setCurrentRate(1);
-    }
+      totalPublicTokens = totalPublicTokens.add(_tokens);
+    } 
+  }
+     
+  /**
+    * @dev Returns the rate of tokens per wei at the present time.
+    * @return The number of tokens a buyer gets per wei at a given time
+    */
+  function getCurrentRate() public view returns (uint256) {
+      return _wserate;
+  }
+  
+  /**
+    * The base rate function is overridden to revert, since this crowdsale doens't use it, and
+    * all calls to it are a mistake.
+    */
+  function rate() public view returns (uint256) {
+      return getCurrentRate();
   }
 
   /**
-   * @dev Change the current rate
-  */
-  function setCurrentRate(uint256 _rate) private {
-      rate = _rate;
+    * @dev Overrides parent method taking into account variable rate.
+    * @param weiAmount The value in wei to be converted into tokens
+    * @return The number of tokens _weiAmount wei will buy at present time
+    */
+  function _getTokenAmount(uint256 weiAmount) internal view returns (uint256) {
+      uint256 currentRate = getCurrentRate();
+      return currentRate.mul(weiAmount);
   }
 
   /**
-   * @dev forwards funds to the wallet during the PrivateICO/PreICO stage, then the refund vault during ICO stage
-   */
-  function _forwardFunds() internal {
-    if(stage == CrowdsaleStage.PrivateICO) {
-      wallet.transfer(msg.value);
-            emit EthTransferred("forwarding funds to wallet PrivateICO");
-    } else if (stage == CrowdsaleStage.PreICO) {
-      wallet.transfer(msg.value);
-            emit EthTransferred("forwarding funds to wallet PreICO");
-    } else if (stage == CrowdsaleStage.ICO) {
-            emit EthTransferred("forwarding funds to refundable vault");
-      super._forwardFunds();
-    }
-  }
-
-  /**
-  * @dev Extend parent behavior requiring purchase to respect investor min/max funding cap.
+  * @dev Extend parent behavior verifing the limits of each stage
   * @param _beneficiary Token purchaser
   * @param _weiAmount Amount of wei contributed
   */
-  function _preValidatePurchase(
-    address _beneficiary,
-    uint256 _weiAmount
-  )
-    internal
-  {
-    super._preValidatePurchase(_beneficiary, _weiAmount);
-    uint256 _existingContribution = contributions[_beneficiary];
-    uint256 _newContribution = _existingContribution.add(_weiAmount);
-    require(_newContribution >= investorMinCap && _newContribution <= investorHardCap);
-    contributions[_beneficiary] = _newContribution;
+  function _preValidatePurchase( address payable _beneficiary, uint256 _weiAmount ) internal {
+    super._preValidatePurchase(_beneficiary, _weiAmount );
+    require(_validateTokenLimits(_getTokenAmountSimple(_weiAmount)));
   }
 
   /**
-   * @dev enables token transfers, called when owner calls finalize()
+    * @dev validates the tokens limit of Private and Public stages
+    * @param tokens new tokens
+    * @return if it is posible to continue or has reached the limits
+    */
+  function _validateTokenLimits(uint256 tokens) internal returns (bool) {
+      if(stage == CrowdsaleStage.PrivateICO) { 
+        require(totalPrivateTokens.add(tokens)  <= privateFundDistribution.mul(10**6));
+      } else if (stage == CrowdsaleStage.PreICO) {
+        require(totalPreTokens.add(tokens)      <= preFundDistribution.mul(10**6));
+      } else if (stage == CrowdsaleStage.ICO) { 
+        // Public ICO doesn't have any tokens limits,
+        // however will be limited by the cap contract;
+        // and the cap will be on ETH rather than tokens.
+      }
+      return true;
+  }
+
+  /**
+    * @dev Utility method to convert wei to tokens
+    * @param weiAmount Value in wei to be converted into tokens
+    * @return Number of tokens that can be purchased with the specified _weiAmount
+    */
+  function _getTokenAmountSimple(uint256 weiAmount) internal view returns (uint256) {
+    return _getTokenAmount(weiAmount).div(10**18);
+  } 
+ 
+  /**
+    * @dev Override for extensions that require an internal state to check for validity (current user contributions, etc.)
+    * @param beneficiary Address receiving the tokens
+    * @param weiAmount Value in wei involved in the purchase
   */
-  function finalization() internal {
-    if(goalReached()) {
-      MintableToken _mintableToken = MintableToken(token);
-      uint256 _alreadyMinted = _mintableToken.totalSupply();
+  function _updatePurchasingState(address beneficiary, uint256 weiAmount) internal {
+    updateTokensQuantity(_getTokenAmountSimple(weiAmount)); 
+  }
 
-      uint256 _finalTotalSupply = _alreadyMinted.div(tokenSalePercentage).mul(100);
-
-      foundersTimelock   = new TokenTimelock(token, foundersFund, releaseTime);
-      foundationTimelock = new TokenTimelock(token, foundationFund, releaseTime);
-      partnersTimelock   = new TokenTimelock(token, partnersFund, releaseTime);
-
-      _mintableToken.mint(address(foundersTimelock),   _finalTotalSupply.mul(foundersPercentage).div(100));
-      _mintableToken.mint(address(foundationTimelock), _finalTotalSupply.mul(foundationPercentage).div(100));
-      _mintableToken.mint(address(partnersTimelock),   _finalTotalSupply.mul(partnersPercentage).div(100));
-
-      _mintableToken.finishMinting();
-      // Unpause the token
-      PausableToken _pausableToken = PausableToken(token);
-      _pausableToken.unpause();
-      _pausableToken.transferOwnership(wallet);
+  /**
+    * @dev forwards funds to the wallet during the PrivateICO/PreICO stage, 
+    * then the refund vault during ICO stage using the RefundablePostDeliveryCrowdsale
+  */
+  function _forwardFunds() internal {
+    if(stage == CrowdsaleStage.PrivateICO) {
+      address(wallet()).transfer(msg.value);
+      // emit EthTransferred("forwarding funds to wallet PrivateICO");
+    } else if (stage == CrowdsaleStage.PreICO) {
+      address(wallet()).transfer(msg.value);
+      // emit EthTransferred("forwarding funds to wallet PreICO");
+    } else if (stage == CrowdsaleStage.ICO) {
+      // emit EthTransferred("forwarding funds to refundable vault");
+      super._forwardFunds();
     }
+  }
+   
+  /**
+    * @dev Allocates tokens for investors that contributed. These include
+    * whitelisted investors and investors paying with usd
+    * mode mint/manual
+    * @param _beneficiary Token purchaser
+    * @param _tokens Number of tokens
+  */
+  function mintTokensInvestors(address _beneficiary, uint256 _tokens) onlyOwner public {
+      uint tokensInWei = _tokens.mul(10**18);
+      require(_beneficiary != address(0));
+      require(_tokens > 0);
+      require(_validateTokenLimits(_tokens));
+      require(ERC20Mintable(address(token())).mint(_beneficiary, tokensInWei));
+      updateTokensQuantity(_tokens);
+  }
 
-    super.finalization();
+  /**
+    * @dev Allocates tokens for each group
+    * Requires mintin role
+    * mode: mint/manual
+  */
+  function mintFullTeam() internal {
+    if(goalReached()) {
+      ERC20Mintable _mintableToken = ERC20Mintable(address(token()));
+      _mintableToken.mint(address(airdroppedFund),  airdroppedFundDistribution  * (10**6) * 10**18);
+      _mintableToken.mint(address(advisorsFund),    advisorsFundDistribution    * (10**6) * 10**18);
+      _mintableToken.mint(address(teamFund),        teamFundDistribution        * (10**6) * 10**18);
+      _mintableToken.mint(address(bussinesFund),    bussinesFundDistribution    * (10**6) * 10**18);
+      _mintableToken.mint(address(reserveFund),     reserveFundDistribution     * (10**6) * 10**18);
+    }
+  }
+ 
+  /**
+    * @dev called when owner calls finalize(), calls mintFullTeam()
+    * Requires mintin role
+  */
+  function _finalization() internal { 
+    if(goalReached()) { 
+      mintFullTeam();
+    }
+    super._finalization();
   } 
 
 }

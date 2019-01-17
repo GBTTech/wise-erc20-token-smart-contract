@@ -1,15 +1,14 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.5.0;
 
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Mintable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Pausable.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol"; 
+import "openzeppelin-solidity/contracts/ownership/Ownable.sol"; 
 
-import "openzeppelin-solidity/contracts/token/ERC20/DetailedERC20.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/MintableToken.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/PausableToken.sol";
+contract WiseToken is  ERC20, ERC20Detailed, ERC20Mintable, ERC20Pausable, Ownable{
 
-contract WiseToken is MintableToken, PausableToken, DetailedERC20 {
-    constructor(string _name, string _symbol, uint8 _decimals)
-        DetailedERC20(_name, _symbol, _decimals)
-        public
-    {
+    constructor () public ERC20Detailed("JAMESJARA21", "JJJ21", 18) {
 
     }
 }
