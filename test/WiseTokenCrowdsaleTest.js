@@ -3,7 +3,8 @@ const { BN, balance, ether, should, shouldFail, time } = require('openzeppelin-t
 const WiseToken = artifacts.require('./WiseToken.sol');
 const WiseTokenCrowdsale = artifacts.require('./WiseTokenCrowdsale.sol');
 
-contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor, investor2, investor3, investor4, foundersFund ]) {
+contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
+  investor2, investor3, investor4, foundersFund ]) {
   const RATE = new BN(1);
   const GOAL = ether('10');
   const CAP = ether('20');
@@ -39,9 +40,9 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
 
     await this.token.transferOwnership(this.crowdsale.address, { from: _ });
     await this.token.addMinter(this.crowdsale.address, { from: _ });
-    await this.crowdsale.setCrowdsaleStage(0, RATE, { from: _ } ); 
+    await this.crowdsale.setCrowdsaleStage(0, RATE, { from: _ });
   });
-  
+
   describe('crowdsale', function () {
     it('should create crowdsale with correct parameters', async function () {
       should.exist(this.crowdsale);
@@ -79,15 +80,18 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
 
     it('should accept eth payments', async function () {
       await time.increaseTo(this.openingTime);
-      const expectedTokenAmount =  ether('5');
+      const expectedTokenAmount = ether('5');
       await this.crowdsale.setCrowdsaleStage(0, 1, { from: _ });
-      await web3.eth.sendTransaction({ value: expectedTokenAmount, from: investor4 , to: this.crowdsale.address , gas: 4712388 });
+      await web3.eth.sendTransaction({ value: expectedTokenAmount,
+        from: investor4,
+        to: this.crowdsale.address,
+        gas: 4712388 });
       (await this.crowdsale.balanceOf(investor4)).should.be.bignumber.equal(expectedTokenAmount);
     });
 
-    it('should reject if hit stage tokens cap of 20000000 tokens', async function () { 
-      const expectedTokenAmount =  new BN('5');
-      const totalPrivateTokensLimit =  new BN('20000000');
+    it('should reject if hit stage tokens cap of 20000000 tokens', async function () {
+      const expectedTokenAmount = new BN('5');
+      const totalPrivateTokensLimit = new BN('20000000');
       await this.crowdsale.setCrowdsaleStage(0, 1, { from: _ });
       await this.crowdsale.mintTokensInvestors(investor3, expectedTokenAmount, { from: _ });
       await shouldFail.reverting(this.crowdsale.mintTokensInvestors(investor3, totalPrivateTokensLimit, { from: _ }));
@@ -109,21 +113,24 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
 
     it('should accept eth payments', async function () {
       await time.increaseTo(this.openingTime);
-      const expectedTokenAmount =  ether('5');
+      const expectedTokenAmount = ether('5');
       await this.crowdsale.setCrowdsaleStage(1, 1, { from: _ });
-      await web3.eth.sendTransaction({ value: expectedTokenAmount, from: investor4 , to: this.crowdsale.address , gas: 4712388 });
+      await web3.eth.sendTransaction({ value: expectedTokenAmount,
+        from: investor4,
+        to: this.crowdsale.address,
+        gas: 4712388 });
       (await this.crowdsale.balanceOf(investor4)).should.be.bignumber.equal(expectedTokenAmount);
     });
 
-    it('should reject if hit stage tokens cap of 10000000 tokens', async function () { 
-      const expectedTokenAmount =  new BN('1');
-      const totalPreTokensLimit =  new BN('10000000');
+    it('should reject if hit stage tokens cap of 10000000 tokens', async function () {
+      const expectedTokenAmount = new BN('1');
+      const totalPreTokensLimit = new BN('10000000');
       await this.crowdsale.setCrowdsaleStage(1, 1, { from: _ });
       await this.crowdsale.mintTokensInvestors(investor3, expectedTokenAmount, { from: _ }); ;
-      await shouldFail.reverting(this.crowdsale.mintTokensInvestors(investor3, totalPreTokensLimit, { from: _ }));
+      await shouldFail.reverting(this.crowdsale.mintTokensInvestors(investor3,
+        totalPreTokensLimit, { from: _ }));
     });
   });
-
 
   describe('Public Sale', async function () {
     it('should change stage and rate to public', async function () {
@@ -140,16 +147,17 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
 
     it('should accept eth payments', async function () {
       await time.increaseTo(this.openingTime);
-      const expectedTokenAmount =  ether('5');
+      const expectedTokenAmount = ether('5');
       await this.crowdsale.setCrowdsaleStage(2, 1, { from: _ });
-      await web3.eth.sendTransaction({ value: expectedTokenAmount, from: investor4 , to: this.crowdsale.address , gas: 4712388 });
+      await web3.eth.sendTransaction({ value: expectedTokenAmount,
+        from: investor4,
+        to: this.crowdsale.address,
+        gas: 4712388 });
       (await this.crowdsale.balanceOf(investor4)).should.be.bignumber.equal(expectedTokenAmount);
     });
-
   });
 
   describe('Specific methods', async function () {
-
     it('setCurrentRate', async function () {
       const trate = new BN(5);
       await this.crowdsale.setCurrentRate(trate, { from: _ });
@@ -157,7 +165,7 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
       rate.should.be.bignumber.equal(trate);
     });
 
-    it('setCurrentRate non-owner',  async function () { 
+    it('setCurrentRate non-owner', async function () {
       await shouldFail.reverting(this.crowdsale.setCurrentRate(new BN(5), { from: investor2 }));
     });
 
@@ -168,7 +176,7 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
       stageId.should.be.bignumber.equal(new BN(stage));
     });
 
-    it('setCrowdsaleStage non-owner', async function () { 
+    it('setCrowdsaleStage non-owner', async function () {
       await shouldFail.reverting(this.crowdsale.setCrowdsaleStage(0, RATE, { from: investor2 }));
     });
 
@@ -181,21 +189,19 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
     });
 
     it('mintFullTeam', async function () {
-      // @TODO: validate how to track token once get 
+      // @TODO: validate how to track token once get
     });
 
     it('mintFullTeam non-owner', async function () {
-      // @TODO: validate how to track token once get 
+      // @TODO: validate how to track token once get
     });
 
     it('mintFullTeam cap is reached', async function () {
-      // @TODO: validate how to track token once get 
+      // @TODO: validate how to track token once get
     });
- 
   });
 
   describe('Crowdsale stages', async function () {
-
     it('change to private stage', async function () {
       const stageId = new BN('0');
       await this.crowdsale.setCrowdsaleStage(stageId, RATE, { from: _ });
@@ -222,11 +228,12 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
   });
 
   describe('CappedCrowdsale', async function () {
-
     it('Should reject payments over cap', async function () {
       await time.increaseTo(this.openingTime);
       await this.crowdsale.sendTransaction({ value: CAP, from: investor, gasPrice: 0 });
-      await shouldFail.reverting(this.crowdsale.sendTransaction({ value: ether('1'), from: investor, gasPrice: 0 }));
+      await shouldFail.reverting(this.crowdsale.sendTransaction({ value: ether('1'),
+        from: investor,
+        gasPrice: 0 }));
     });
 
     it('should allow finalization and transfer funds to wallet if the goal is reached', async function () {
@@ -249,53 +256,54 @@ contract('WiseTokenCrowdsale', function ([ _, deployer, owner, wallet, investor,
     });
   });
 
-  describe('token distribution', function() {
+  describe('token distribution', function () {
     it('tracks token distribution correctly', async function () {
-      const crowdsaleFundDistribution  = new BN('35');
+      const crowdsaleFundDistribution = new BN('35');
       const airdroppedFundDistribution = new BN('5');
-      const advisorsFundDistribution   = new BN('3');
-      const teamFundDistribution       = new BN('7');
-      const bussinesFundDistribution   = new BN('30');
-      const reserveFundDistribution    = new BN('20');
-      const privateFundDistribution    = new BN('20');
-      const preFundDistribution        = new BN('10');
-      const publicFundDistribution     = new BN('5');
-      crowdsaleFundDistribution.should.be.bignumber.eq(await this.crowdsale.crowdsaleFundDistribution()); 
-      airdroppedFundDistribution.should.be.bignumber.eq(await this.crowdsale.airdroppedFundDistribution()); 
-      advisorsFundDistribution.should.be.bignumber.eq(await this.crowdsale.advisorsFundDistribution()); 
-      teamFundDistribution.should.be.bignumber.eq(await this.crowdsale.teamFundDistribution()); 
-      bussinesFundDistribution.should.be.bignumber.eq(await this.crowdsale.bussinesFundDistribution()); 
-      reserveFundDistribution.should.be.bignumber.eq(await this.crowdsale.reserveFundDistribution()); 
-      privateFundDistribution.should.be.bignumber.eq(await this.crowdsale.privateFundDistribution()); 
-      preFundDistribution.should.be.bignumber.eq(await this.crowdsale.preFundDistribution()); 
+      const advisorsFundDistribution = new BN('3');
+      const teamFundDistribution = new BN('7');
+      const bussinesFundDistribution = new BN('30');
+      const reserveFundDistribution = new BN('20');
+      const privateFundDistribution = new BN('20');
+      const preFundDistribution = new BN('10');
+      const publicFundDistribution = new BN('5');
+      crowdsaleFundDistribution.should.be.bignumber.eq(await this.crowdsale.crowdsaleFundDistribution());
+      airdroppedFundDistribution.should.be.bignumber.eq(await this.crowdsale.airdroppedFundDistribution());
+      advisorsFundDistribution.should.be.bignumber.eq(await this.crowdsale.advisorsFundDistribution());
+      teamFundDistribution.should.be.bignumber.eq(await this.crowdsale.teamFundDistribution());
+      bussinesFundDistribution.should.be.bignumber.eq(await this.crowdsale.bussinesFundDistribution());
+      reserveFundDistribution.should.be.bignumber.eq(await this.crowdsale.reserveFundDistribution());
+      privateFundDistribution.should.be.bignumber.eq(await this.crowdsale.privateFundDistribution());
+      preFundDistribution.should.be.bignumber.eq(await this.crowdsale.preFundDistribution());
       publicFundDistribution.should.be.bignumber.eq(await this.crowdsale.publicFundDistribution());
     });
- 
+
     it('is a valid percentage breakdown', async function () {
-      const crowdsaleFundDistribution  = await this.crowdsale.crowdsaleFundDistribution();
+      const crowdsaleFundDistribution = await this.crowdsale.crowdsaleFundDistribution();
       const airdroppedFundDistribution = await this.crowdsale.airdroppedFundDistribution();
-      const advisorsFundDistribution   = await this.crowdsale.advisorsFundDistribution();
-      const teamFundDistribution       = await this.crowdsale.teamFundDistribution();
-      const bussinesFundDistribution   = await this.crowdsale.bussinesFundDistribution();
-      const reserveFundDistribution    = await this.crowdsale.reserveFundDistribution();
-      const total = crowdsaleFundDistribution.toNumber() + airdroppedFundDistribution.toNumber() + advisorsFundDistribution.toNumber()
-      + teamFundDistribution.toNumber() + bussinesFundDistribution.toNumber() + reserveFundDistribution.toNumber();
+      const advisorsFundDistribution = await this.crowdsale.advisorsFundDistribution();
+      const teamFundDistribution = await this.crowdsale.teamFundDistribution();
+      const bussinesFundDistribution = await this.crowdsale.bussinesFundDistribution();
+      const reserveFundDistribution = await this.crowdsale.reserveFundDistribution();
+      const total = crowdsaleFundDistribution.toNumber() + airdroppedFundDistribution.toNumber() +
+      advisorsFundDistribution.toNumber() +
+      teamFundDistribution.toNumber() + bussinesFundDistribution.toNumber() + reserveFundDistribution.toNumber();
       total.should.equal(100);
     });
 
     it('is a valid tokens breakdown', async function () {
-      const privateFundDistribution    = await this.crowdsale.privateFundDistribution();
-      const preFundDistribution        = await this.crowdsale.preFundDistribution();
-      const publicFundDistribution     = await this.crowdsale.publicFundDistribution();
-      const total = privateFundDistribution.toNumber() +  preFundDistribution.toNumber() + publicFundDistribution.toNumber();
+      const privateFundDistribution = await this.crowdsale.privateFundDistribution();
+      const preFundDistribution = await this.crowdsale.preFundDistribution();
+      const publicFundDistribution = await this.crowdsale.publicFundDistribution();
+      const total = privateFundDistribution.toNumber() + preFundDistribution.toNumber() +
+      publicFundDistribution.toNumber();
       total.should.equal(35);
     });
   });
 
   describe('Behavior', async function () {
     it('handles goal reached', async function () {
-      
+
     });
   });
 });
- 

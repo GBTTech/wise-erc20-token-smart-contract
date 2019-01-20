@@ -1,3 +1,5 @@
+/* eslint camelcase: "error" */
+
 require('babel-register');
 require('babel-polyfill');
 require('dotenv').config();
@@ -24,6 +26,7 @@ module.exports = {
     development: {
       host: 'localhost', // Localhost (default: none)
       port: 7545, // Standard Ethereum port (default: none)
+      // eslint-disable-next-line camelcase
       network_id: '5777', // Any network (default: none)
       gasPrice: 2000000000,
       gas: 6721975,
@@ -43,6 +46,7 @@ module.exports = {
     // NB: It's important to wrap the provider as a function.
     ropsten: {
       provider: new HDWalletProvider(process.env.MNEMONIC, `https://ropsten.infura.io/x${process.env.INFURA_API_KEY}`),
+      // eslint-disable-next-line camelcase
       network_id: 3, // Ropsten's id
       // gas: 5500000,        // Ropsten has a lower block limit than mainnet
       // gasPrice: 25000000000,
@@ -67,10 +71,10 @@ module.exports = {
   solc: {
     optimizer: {
       enabled: false,
-      runs: 200
-    }
+      runs: 200,
+    },
   },
-  
+
   // Configure your compilers
   compilers: {
     solc: {
