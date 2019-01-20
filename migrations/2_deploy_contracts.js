@@ -16,8 +16,8 @@ module.exports = function (deployer, network, accounts) {
 
   const _rate = 1; // 1 wei can buy 1 tokens
   const _wallet = '0x2dE3a9ebb1E1095185777cf5b18FdFCd14565907';
-  const _cap = ether(100);
-  const _goal = ether(1);
+  const _cap = ether(186620);
+  const _goal = ether(69980);
   const _fundAddresses = [
     '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
     '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
@@ -26,7 +26,7 @@ module.exports = function (deployer, network, accounts) {
     '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
   ];
   const _openingTime = latestTime + duration.minutes(1); // latestTime + duration.minutes(1);
-  const _closingTime = _openingTime + duration.minutes(30); // duration.weeks(1);
+  const _closingTime = 1569718861; //_openingTime + duration.minutes(30); // duration.weeks(1);
 
   let tokenInstance,
     wiseCrowdsaleInstance;
@@ -57,7 +57,6 @@ module.exports = function (deployer, network, accounts) {
     })
     .then(function () {
       console.log(wiseCrowdsaleInstance.address);
-
       tokenInstance.transferOwnership(wiseCrowdsaleInstance.address);
       tokenInstance.addMinter(wiseCrowdsaleInstance.address);
       wiseCrowdsaleInstance.setCrowdsaleStage(0);
