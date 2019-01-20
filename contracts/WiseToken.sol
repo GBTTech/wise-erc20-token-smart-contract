@@ -7,6 +7,6 @@ import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol"; 
 
 contract WiseToken is  ERC20, ERC20Detailed, ERC20Mintable, ERC20Pausable, Ownable{
-    constructor () public ERC20Detailed("JAMESJARA45", "J45", 18) {
+    constructor () public ERC20Detailed("WISE TOKEN", "WSE", 18) {
     }
 }

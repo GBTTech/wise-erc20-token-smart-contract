@@ -15,15 +15,15 @@ module.exports = function (deployer, network, accounts) {
   const latestTime = Math.floor(Date.now() / 1000);
 
   const _rate = 1; // 1 wei can buy 1 tokens
-  const _wallet = '0x2dE3a9ebb1E1095185777cf5b18FdFCd14565907';
+  const _wallet = '0xc4c1e2C6cbF660FfFba769c8eA6cF507a34581D6';
   const _cap = ether(186620);
   const _goal = ether(69980);
   const _fundAddresses = [
-    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
-    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
-    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
-    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
-    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
+    '0xE38F5BC404818b45c669f8B9226C178B739ea804',
+    '0xd10d38aea7cEf015709473185125e68835754E9b',
+    '0x402a8a711F30BCc8d5D9326Eeb23A083349272e1',
+    '0x45DdB78D64024D544BA2cDDf2132A4b78188E3d8',
+    '0x1bB370F547c74E6ae0F313D035d5b1D7A78557bC',
   ];
   const _openingTime = latestTime + duration.minutes(1); // latestTime + duration.minutes(1);
   const _closingTime = 1569718861; //_openingTime + duration.minutes(30); // duration.weeks(1);
