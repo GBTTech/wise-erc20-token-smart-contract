@@ -1,5 +1,5 @@
 const WiseToken = artifacts.require('./WiseToken.sol');
-const WiseTokenCrowdsale = artifacts.require('./WiseTokenCrowdsale.sol'); 
+const WiseTokenCrowdsale = artifacts.require('./WiseTokenCrowdsale.sol');
 const ether = (n) => web3.utils.toWei(String(n), 'ether');
 
 const duration = {
@@ -23,50 +23,44 @@ module.exports = function (deployer, network, accounts) {
     '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
     '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
     '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
-    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869'
-  ];  
-  const _openingTime = latestTime   + duration.minutes(1); // latestTime + duration.minutes(1);
+    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
+  ];
+  const _openingTime = latestTime + duration.minutes(1); // latestTime + duration.minutes(1);
   const _closingTime = _openingTime + duration.minutes(30); // duration.weeks(1);
 
   let tokenInstance,
     wiseCrowdsaleInstance;
- 
-    return deployer.deploy(WiseToken)
-      .then(function () {
-        return WiseToken.deployed();
-      })
-      .then(function (_instance) {
-        tokenInstance = _instance;
-        return deployer.deploy(
-          WiseTokenCrowdsale,
-          _rate,
-          _wallet,
-          tokenInstance.address,
-          _cap,
-          _goal,
-          _fundAddresses,
-          _openingTime,
-          _closingTime
-        );
-      })
-      .then(function () {
-        return WiseTokenCrowdsale.deployed();
-      })
-      .then(function (_instance) {
-        wiseCrowdsaleInstance = _instance;
-      })
-      .then(function () {
-        console.log(wiseCrowdsaleInstance.address)
 
-        tokenInstance.transferOwnership(wiseCrowdsaleInstance.address) ;
-        tokenInstance.addMinter(wiseCrowdsaleInstance.address);
-        wiseCrowdsaleInstance.setCrowdsaleStage(0);
-        wiseCrowdsaleInstance.setCurrentRate(23,15);
-        
-      });
-      
+  return deployer.deploy(WiseToken)
+    .then(function () {
+      return WiseToken.deployed();
+    })
+    .then(function (_instance) {
+      tokenInstance = _instance;
+      return deployer.deploy(
+        WiseTokenCrowdsale,
+        _rate,
+        _wallet,
+        tokenInstance.address,
+        _cap,
+        _goal,
+        _fundAddresses,
+        _openingTime,
+        _closingTime
+      );
+    })
+    .then(function () {
+      return WiseTokenCrowdsale.deployed();
+    })
+    .then(function (_instance) {
+      wiseCrowdsaleInstance = _instance;
+    })
+    .then(function () {
+      console.log(wiseCrowdsaleInstance.address);
+
+      tokenInstance.transferOwnership(wiseCrowdsaleInstance.address);
+      tokenInstance.addMinter(wiseCrowdsaleInstance.address);
+      wiseCrowdsaleInstance.setCrowdsaleStage(0);
+      wiseCrowdsaleInstance.setCurrentRate(23, 15);
+    });
 };
-
-4999990
-
-tokensale.mintTokensInvestors("0x65E248928D301f7f796500c0fE1B934534c38ea3", 1)
