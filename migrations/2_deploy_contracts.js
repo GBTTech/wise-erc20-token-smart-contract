@@ -14,24 +14,23 @@ const duration = {
 module.exports = function (deployer, network, accounts) {
   const latestTime = Math.floor(Date.now() / 1000);
 
-  const _rate = 1; // 1 ETH can buy 1 tokens
-  const _wallet = '0xf0E1610e2083eea8c4342952a483FD6A673F6c87';
+  const _rate = 1; // 1 wei can buy 1 tokens
+  const _wallet = '0x2dE3a9ebb1E1095185777cf5b18FdFCd14565907';
   const _cap = ether(100);
   const _goal = ether(1);
   const _fundAddresses = [
-    '0x9C7226A38a28518f8f843Dd2c41bB3Db019b56cb',
-    '0x9C7226A38a28518f8f843Dd2c41bB3Db019b56cb',
-    '0x9C7226A38a28518f8f843Dd2c41bB3Db019b56cb',
-    '0x9C7226A38a28518f8f843Dd2c41bB3Db019b56cb',
-    '0x9C7226A38a28518f8f843Dd2c41bB3Db019b56cb'
-  ];
-  const _openingTime = latestTime + duration.minutes(1); // latestTime + duration.minutes(1);
-  const _closingTime = _openingTime + duration.minutes(13); // duration.weeks(1);
+    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
+    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
+    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
+    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869',
+    '0xA69CBa3E8c53C2273007C0988Ef07d7a846A7869'
+  ];  
+  const _openingTime = latestTime   + duration.minutes(1); // latestTime + duration.minutes(1);
+  const _closingTime = _openingTime + duration.minutes(30); // duration.weeks(1);
 
   let tokenInstance,
     wiseCrowdsaleInstance;
-
-  module.exports = function (deployer, network, accounts) {
+ 
     return deployer.deploy(WiseToken)
       .then(function () {
         return WiseToken.deployed();
@@ -57,14 +56,17 @@ module.exports = function (deployer, network, accounts) {
         wiseCrowdsaleInstance = _instance;
       })
       .then(function () {
-        /*
-        wiseCrowdsaleInstance.stage();
-        tokenInstance.pause();
-        console.log(this.crowdsale.address);
-        tokenInstance.transferOwnership(this.crowdsale.address);
-        tokenInstance.addMinter(this.crowdsale.address);
-        wiseCrowdsaleInstance.setCrowdsaleStage(0, 114);
-        */
+        console.log(wiseCrowdsaleInstance.address)
+
+        tokenInstance.transferOwnership(wiseCrowdsaleInstance.address) ;
+        tokenInstance.addMinter(wiseCrowdsaleInstance.address);
+        wiseCrowdsaleInstance.setCrowdsaleStage(0);
+        wiseCrowdsaleInstance.setCurrentRate(23,15);
+        
       });
-  };
+      
 };
+
+4999990
+
+tokensale.mintTokensInvestors("0x65E248928D301f7f796500c0fE1B934534c38ea3", 1)
