@@ -11,24 +11,36 @@ import "openzeppelin-solidity/contracts/crowdsale/distribution/RefundableCrowdsa
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, RefundableCrowdsale, Ownable {
-    /*
-                      WSE             USD         TR-USD  TOKEN-RATE        STRATEGY
-    ETH PRICE: $150
-    TOTAL SUPPLY: 100 000 000       100 000 0000
-
-    AIR-DROPED     5 000 000 (5%)                 $10                       MINTED
-    ADVISORS       4 000 000 (4%)                 $10                       MINTED
-    TEAM           7 000 000 (7%)                 $10                       MINTED
-    BUSINESS      30 000 000 (30%)                $10                       MINTED
-    RESERVER      20 000 000 (20%)                $10                       MINTED
-
-    PRIVATE       20 000 000 (20%)  60 000 000    $3       50               MANUAL/BUY
-    PRE           10 000 000 (10%)  50 000 000    $5       20               MANUAL/BUY
-    PUBLIC         5 000 000 (5%)   40 000 000    $8       19               BUY
-    */
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////   company  WISE                                                                        //////////////
+    //////////////   website  WISE.CR                                                                     //////////////
+    //////////////   token    WISE                                                                        //////////////
+    //////////////   token symbol   WSE                                                                   //////////////
+    //////////////   developer jamesjara                                                                  //////////////
+    //////////////                     WSE             USD         TR-USD  TOKEN-RATE        STRATEGY     //////////////
+    //////////////   ETH PRICE: $150                                                                      //////////////
+    //////////////   TOTAL SUPPLY: 100 000 000       100 000 0000                                         //////////////
+    //////////////   AIR-DROPED     5 000 000 (5%)                 $10                       MINTED       //////////////
+    //////////////   ADVISORS       4 000 000 (4%)                 $10                       MINTED       //////////////
+    //////////////   TEAM           7 000 000 (7%)                 $10                       MINTED       //////////////
+    //////////////   BUSINESS      30 000 000 (30%)                $10                       MINTED       //////////////
+    //////////////   RESERVER      20 000 000 (20%)                $10                       MINTED       //////////////
+    //////////////   PRIVATE       20 000 000 (20%)  60 000 000    $3       50               MANUAL/BUY   //////////////
+    //////////////   PRE           10 000 000 (10%)  50 000 000    $5       20               MANUAL/BUY   //////////////
+    //////////////   PUBLIC         5 000 000 (5%)   40 000 000    $8       19               BUY          //////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // Events
     event EthTransferred(string text);
+    event RateChanged(uint256 rate);
+    event StageChanged(uint256 stage);
+    event TokensQuantityChanged(uint256 stage, uint256 _tokens);
+    event MintTokens(address _beneficiary, uint256 _tokens);
+    event MintFullTeamDone();
 
     // Crowdsale
     enum CrowdsaleStage { PrivateICO, PreICO, ICO }
@@ -88,10 +100,12 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
     /**
       * @dev Change the current rate
       * @param _rate rate
+      * @param _multiplier multiplier of the reate
     */
     function setCurrentRate(uint256 _rate, uint256 _multiplier) public onlyOwner {
         // ETH-PRICE / TOKEN-USD-PRICE
         _wserate = _rate.mul(10**_multiplier);
+        emit RateChanged(_wserate);
     }
 
     /**
@@ -106,6 +120,7 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
         } else if (uint(CrowdsaleStage.ICO) == _stage) {
             stage = CrowdsaleStage.ICO;
         }
+        emit StageChanged(uint(stage));
     }
 
     /**
@@ -120,11 +135,13 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
         } else if (stage == CrowdsaleStage.ICO) {
             totalPublicTokens = totalPublicTokens.add(_tokens);
         }
+        emit TokensQuantityChanged(uint(stage), _tokens);
     }
 
     /**
       * @dev Update current tokens total stack by stage for mantaince
-      * @param _tokens new tokens
+      * @param _stage stage
+      * @param _tokens new tokens state
       */
     function updateTokensQuantityAdmin(uint _stage, uint256 _tokens) public onlyOwner  {
         if(_stage == uint(CrowdsaleStage.PrivateICO)) {
@@ -134,6 +151,7 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
         } else if (_stage == uint(CrowdsaleStage.ICO)) {
             totalPublicTokens = _tokens;
         }
+        emit TokensQuantityChanged(_stage, _tokens);
     }
 
     /**
@@ -184,10 +202,10 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
 
     /**
       * @dev Calculate tokens amount.
-      * @param rateP xxxx
-      * @param rateMultiplierP xxxx
-      * @param weiAmountP xxxx
-      * @param weiAmountMultiplierP xxxx
+      * @param rateP rate of token
+      * @param rateMultiplierP rate multiplier
+      * @param weiAmountP wei 
+      * @param weiAmountMultiplierP wei multiplier
       * @return The number of tokens _weiAmount wei will buy at present time
       */
     function calculateTokens(uint256 rateP, uint256 rateMultiplierP, uint weiAmountP, uint weiAmountMultiplierP) public view returns (uint256) {
@@ -268,6 +286,7 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
         require(_validateTokenLimits(_tokens), "max tokens reached");
         require(ERC20Mintable(address(token())).mint(_beneficiary, tokensInWei), "mint error");
         updateTokensQuantity(_tokens);
+        emit MintTokens(_beneficiary, _tokens);
     }
 
     /**
@@ -275,7 +294,7 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
       * Requires mintin role
       * mode: mint/manual
     */
-    function mintFullTeam() internal {
+    function mintFullTeam() public onlyOwner {
         if(goalReached()) {
             ERC20Mintable _mintableToken = ERC20Mintable(address(token()));
             _mintableToken.mint(address(airdroppedFund), airdroppedFundDistribution * (10**6) * 10**18);
@@ -283,6 +302,7 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
             _mintableToken.mint(address(teamFund), teamFundDistribution * (10**6) * 10**18);
             _mintableToken.mint(address(bussinesFund), bussinesFundDistribution * (10**6) * 10**18);
             _mintableToken.mint(address(reserveFund), reserveFundDistribution * (10**6) * 10**18);
+            emit MintFullTeamDone();
         }
     }
 
