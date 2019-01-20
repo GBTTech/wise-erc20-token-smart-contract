@@ -64,6 +64,13 @@ module.exports = {
     // timeout: 100000
   },
 
+  solc: {
+    optimizer: {
+      enabled: false,
+      runs: 200
+    }
+  },
+  
   // Configure your compilers
   compilers: {
     solc: {

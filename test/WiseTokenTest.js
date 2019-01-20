@@ -1,8 +1,8 @@
 const WiseToken = artifacts.require('./WiseToken.sol');
 
 contract('WiseToken', (accounts) => {
-  const _name = 'JAMESJARA10';
-  const _symbol = 'JJJ10';
+  const _name = 'JAMESJARA25';
+  const _symbol = 'JJJ25';
   const _decimals = 18;
 
   beforeEach(async function () {
