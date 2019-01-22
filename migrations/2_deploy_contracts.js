@@ -25,12 +25,12 @@ module.exports = function (deployer, network, accounts) {
     '0x45DdB78D64024D544BA2cDDf2132A4b78188E3d8',
     '0x1bB370F547c74E6ae0F313D035d5b1D7A78557bC',
   ];
-  const _openingTime = latestTime + duration.minutes(1); // latestTime + duration.minutes(1);
+  const _openingTime = latestTime + duration.minutes(30); // latestTime + duration.minutes(1);
   const _closingTime = 1569718861; //_openingTime + duration.minutes(30); // duration.weeks(1);
 
   let tokenInstance,
     wiseCrowdsaleInstance;
-
+    
   return deployer.deploy(WiseToken)
     .then(function () {
       return WiseToken.deployed();
@@ -57,9 +57,9 @@ module.exports = function (deployer, network, accounts) {
     })
     .then(function () {
       console.log(wiseCrowdsaleInstance.address);
-      tokenInstance.transferOwnership(wiseCrowdsaleInstance.address);
-      tokenInstance.addMinter(wiseCrowdsaleInstance.address);
-      wiseCrowdsaleInstance.setCrowdsaleStage(0);
-      wiseCrowdsaleInstance.setCurrentRate(23, 15);
+      //tokenInstance.transferOwnership(wiseCrowdsaleInstance.address);
+      //tokenInstance.addMinter(wiseCrowdsaleInstance.address);
+      //wiseCrowdsaleInstance.setCrowdsaleStage(0);
+      //wiseCrowdsaleInstance.setCurrentRate(23, 15);
     });
 };
