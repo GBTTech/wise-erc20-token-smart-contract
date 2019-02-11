@@ -9,6 +9,7 @@ import "openzeppelin-solidity/contracts/crowdsale/validation/CappedCrowdsale.sol
 import "openzeppelin-solidity/contracts/crowdsale/validation/TimedCrowdsale.sol";
 import "openzeppelin-solidity/contracts/crowdsale/distribution/RefundableCrowdsale.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/drafts/TokenVesting.sol";
 
 contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, TimedCrowdsale, RefundableCrowdsale, Ownable {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,6 +72,10 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
     uint256 public totalPrivateTokens = 0;
     uint256 public totalPreTokens     = 0;
     uint256 public totalPublicTokens  = 0;
+
+    // Vesting
+    uint256 public constant VESTING_CLIFF = 365 days;
+    uint256 public constant VESTING_DURATION = 1460 days;
 
     constructor(
       uint256 _rate,
@@ -297,11 +302,16 @@ contract WiseTokenCrowdsale is Crowdsale, MintedCrowdsale, CappedCrowdsale, Time
     function mintFullTeam() public onlyOwner {
         if(goalReached()) {
             ERC20Mintable _mintableToken = ERC20Mintable(address(token()));
-            _mintableToken.mint(address(airdroppedFund), airdroppedFundDistribution * (10**6) * 10**18);
-            _mintableToken.mint(address(advisorsFund), advisorsFundDistribution * (10**6) * 10**18);
-            _mintableToken.mint(address(teamFund), teamFundDistribution * (10**6) * 10**18);
-            _mintableToken.mint(address(bussinesFund), bussinesFundDistribution * (10**6) * 10**18);
-            _mintableToken.mint(address(reserveFund), reserveFundDistribution * (10**6) * 10**18);
+            TokenVesting airdroppedFundVested = new TokenVesting(airdroppedFund, 1549737919, VESTING_CLIFF, VESTING_DURATION, false);
+            TokenVesting advisorsFundVested = new TokenVesting(advisorsFund, 1549737919, VESTING_CLIFF, VESTING_DURATION, false);
+            TokenVesting teamFundVested = new TokenVesting(teamFund, 1549737919, VESTING_CLIFF, VESTING_DURATION, false);
+            TokenVesting bussinesFundVested = new TokenVesting(bussinesFund, 1549737919, VESTING_CLIFF, VESTING_DURATION, false);
+            TokenVesting reserveFundVested = new TokenVesting(reserveFund, 1549737919, VESTING_CLIFF, VESTING_DURATION, false);
+            _mintableToken.mint(address(airdroppedFundVested), airdroppedFundDistribution * (10**6) * 10**18);
+            _mintableToken.mint(address(advisorsFundVested), advisorsFundDistribution * (10**6) * 10**18);
+            _mintableToken.mint(address(teamFundVested), teamFundDistribution * (10**6) * 10**18);
+            _mintableToken.mint(address(bussinesFundVested), bussinesFundDistribution * (10**6) * 10**18);
+            _mintableToken.mint(address(reserveFundVested), reserveFundDistribution * (10**6) * 10**18);
             emit MintFullTeamDone();
         }
     }
